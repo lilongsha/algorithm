@@ -17,16 +17,19 @@ public class MainApplication {
      * 热点IP
      */
     public static ConcurrentHashMap<String, Long> IP_NUM = new ConcurrentHashMap<>();
-    public static volatile ConcurrentHashMap<String, Long> TOP_IP = new ConcurrentHashMap<>();
+    public static volatile ArrayList<String> TOP_IP = new ArrayList<>();
+    public static final int GENERATOR_FILE_SIZE = 100;
+    public static final int GENERATOR_ROW_SIZE = 10000;
     public static final Long DEFAULT = 1L;
     public static final int TOP_SIZE = 10;
+    public static long MAX_NUM = -1;
     public static AtomicLong findNum = new AtomicLong(0);
     public static final String RESULT_FILE_NAME = "001.txt";
 
     public static void main(String[] args) throws IOException {
-//        generatorIp();
+        generatorIp();
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < GENERATOR_FILE_SIZE; i++) {
             ArrayList<String> ips = readFile(String.format("ip%s.txt", i));
             ips.forEach(ip -> {
                 if (IP_NUM.containsKey(ip)) {
@@ -37,49 +40,28 @@ public class MainApplication {
                 }
             });
         }
-
-//        getTop();
-        getTop(1L, (long) (100 * 1000));
+        getMaxValue();
+        getTop(GENERATOR_FILE_SIZE * GENERATOR_ROW_SIZE);
+//        getTop(MAX_NUM);
         printResult();
         System.out.printf("耗时：%d%n", System.currentTimeMillis() - start);
-//        test();
     }
 
-    public static void test() {
+    public static void getMaxValue() {
         IP_NUM.forEach((key, value) -> {
-            if (value > 61) {
-                System.out.printf("%s::%d%n", key, value);
+            if (value > MAX_NUM) {
+                MAX_NUM = value;
             }
         });
     }
 
-    public static void getTop(Long l, Long r) {
-        if (findNum.get() == TOP_SIZE || l >= r) {
-            return;
-        }
-        long mid = (l + r) / 2;
-        getTop(mid + 1, r);
-        getTop(l, mid);
-        if (!IP_NUM.containsValue(r)) {
-            r = r - 1;
-            return;
-        }
-        if (findNum.get() <= TOP_SIZE && IP_NUM.containsValue(r)) {
-            Long finalR = r;
-            IP_NUM.forEach((key, value) -> {
-                if (Objects.equals(value, finalR) && !TOP_IP.containsKey(key) && findNum.addAndGet(1) <= TOP_SIZE) {
-                    TOP_IP.put(key, value);
-                }
-            });
-        }
-    }
-
-    public static void getTop() {
-        for (int i = 100 * 1000; i > 0; i--) {
-                Long finalI = (long) i;
+    public static void getTop(long i) {
+        for (; i > 0; i--) {
+                Long finalI = i;
                 IP_NUM.forEach((key, value) -> {
-                    if (Objects.equals(value, finalI) && !TOP_IP.containsKey(key) && findNum.addAndGet(1) <= TOP_SIZE) {
-                        TOP_IP.put(key, value);
+                    if (Objects.equals(value, finalI) && !TOP_IP.contains(key) && findNum.addAndGet(1) <= TOP_SIZE) {
+                        TOP_IP.add(key);
+                        TOP_IP.add(String.valueOf(value));
                         System.out.printf("%s::%d::%d%n", key, value, finalI);
                     }
                 });
@@ -89,14 +71,11 @@ public class MainApplication {
     public static void printResult() throws IOException {
         File file = new File(FILE_PATH, RESULT_FILE_NAME);
         FileOutputStream fos = new FileOutputStream(file);
-        TOP_IP.forEach((key, num) -> {
-            try {
-                fos.write(String.format("%s::%d\n", key, num).getBytes(StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        fos.flush();
+        for (int i = 0; i < TOP_IP.size(); i = i + 2) {
+            fos.write(String.format("IP::%s  ", TOP_IP.get(i)).getBytes(StandardCharsets.UTF_8));
+            fos.write(String.format("NUM::%s\n", TOP_IP.get(i + 1)).getBytes(StandardCharsets.UTF_8));
+            fos.flush();
+        }
         fos.close();
     }
 
@@ -115,14 +94,14 @@ public class MainApplication {
 
     public static void generatorIp() throws IOException {
         Random random = new Random();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < GENERATOR_FILE_SIZE; i++) {
             File file = new File(FILE_PATH, String.format("ip%s.txt", i));
             if (!file.exists()) {
                 file.createNewFile();
             }
             if (file.exists()) {
                 FileOutputStream fos = new FileOutputStream(file);
-                for (int j = 0; j < 1000; j++) {
+                for (int j = 0; j < GENERATOR_ROW_SIZE; j++) {
                     switch (j % 10) {
                         case 0:
                             fos.write(String.format(String.format("192.168.0.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
