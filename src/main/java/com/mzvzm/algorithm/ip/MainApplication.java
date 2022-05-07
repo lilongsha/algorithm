@@ -17,17 +17,18 @@ public class MainApplication {
      * 热点IP
      */
     public static ConcurrentHashMap<String, Long> IP_NUM = new ConcurrentHashMap<>();
-    public static volatile ArrayList<String> TOP_IP = new ArrayList<>();
+    public static ArrayList<String> TOP_IP = new ArrayList<>();
+    public static ArrayList<Long> NUM_ORDER = new ArrayList<>();
     public static final int GENERATOR_FILE_SIZE = 100;
-    public static final int GENERATOR_ROW_SIZE = 10000;
+    public static final int GENERATOR_ROW_SIZE = 100000;
     public static final Long DEFAULT = 1L;
-    public static final int TOP_SIZE = 10;
+    public static final int TOP_SIZE = 100;
     public static long MAX_NUM = -1;
     public static AtomicLong findNum = new AtomicLong(0);
     public static final String RESULT_FILE_NAME = "001.txt";
 
     public static void main(String[] args) throws IOException {
-        generatorIp();
+//        generatorIp();
         long start = System.currentTimeMillis();
         for (int i = 0; i < GENERATOR_FILE_SIZE; i++) {
             ArrayList<String> ips = readFile(String.format("ip%s.txt", i));
@@ -41,8 +42,9 @@ public class MainApplication {
             });
         }
         getMaxValue();
-        getTop(GENERATOR_FILE_SIZE * GENERATOR_ROW_SIZE);
-//        getTop(MAX_NUM);
+//        getTop(GENERATOR_FILE_SIZE * GENERATOR_ROW_SIZE);
+        getTop(MAX_NUM);
+//        getTop();
         printResult();
         System.out.printf("耗时：%d%n", System.currentTimeMillis() - start);
     }
@@ -55,16 +57,40 @@ public class MainApplication {
         });
     }
 
+    public static void getTop() {
+        IP_NUM.forEach((key, value) -> {
+            NUM_ORDER.add(value);
+        });
+        NUM_ORDER.sort((a1, a2) -> {
+            if ((a1 - a2 < 0)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        System.out.println(NUM_ORDER);
+        for (long i = 0; i < TOP_SIZE; i++) {
+            long finalI = i;
+            IP_NUM.forEach((key, value) -> {
+                if (Objects.equals(value, finalI) && findNum.addAndGet(1) <= TOP_SIZE) {
+                    TOP_IP.add(key);
+                    TOP_IP.add(String.valueOf(value));
+                    System.out.printf("%s::%d::%d%n", key, value, finalI);
+                }
+            });
+        }
+    }
+
     public static void getTop(long i) {
         for (; i > 0; i--) {
-                Long finalI = i;
-                IP_NUM.forEach((key, value) -> {
-                    if (Objects.equals(value, finalI) && !TOP_IP.contains(key) && findNum.addAndGet(1) <= TOP_SIZE) {
-                        TOP_IP.add(key);
-                        TOP_IP.add(String.valueOf(value));
-                        System.out.printf("%s::%d::%d%n", key, value, finalI);
-                    }
-                });
+            Long finalI = i;
+            IP_NUM.forEach((key, value) -> {
+                if (Objects.equals(value, finalI) && !TOP_IP.contains(key) && findNum.addAndGet(1) <= TOP_SIZE) {
+                    TOP_IP.add(key);
+                    TOP_IP.add(String.valueOf(value));
+                    System.out.printf("%s::%d::%d%n", key, value, finalI);
+                }
+            });
         }
     }
 
