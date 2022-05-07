@@ -68,9 +68,8 @@ public class MainApplication {
                 return 0;
             }
         });
-        System.out.println(NUM_ORDER);
-        for (long i = 0; i < TOP_SIZE; i++) {
-            long finalI = i;
+        for (int i = 0; i < TOP_SIZE; i++) {
+            long finalI = NUM_ORDER.get(i);
             IP_NUM.forEach((key, value) -> {
                 if (Objects.equals(value, finalI) && findNum.addAndGet(1) <= TOP_SIZE) {
                     TOP_IP.add(key);
@@ -128,38 +127,7 @@ public class MainApplication {
             if (file.exists()) {
                 FileOutputStream fos = new FileOutputStream(file);
                 for (int j = 0; j < GENERATOR_ROW_SIZE; j++) {
-                    switch (j % 10) {
-                        case 0:
-                            fos.write(String.format(String.format("192.168.0.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 1:
-                            fos.write(String.format(String.format("192.168.1.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 2:
-                            fos.write(String.format(String.format("192.168.2.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 3:
-                            fos.write(String.format(String.format("192.168.3.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 4:
-                            fos.write(String.format(String.format("192.168.4.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 5:
-                            fos.write(String.format(String.format("192.168.5.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 6:
-                            fos.write(String.format(String.format("192.168.6.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 7:
-                            fos.write(String.format(String.format("192.168.7.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        case 8:
-                            fos.write(String.format(String.format("192.168.8.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                        default:
-                            fos.write(String.format(String.format("192.168.9.%d\n", random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
-                            break;
-                    }
+                    fos.write(String.format(String.format("192.168.%d.%d\n", random.nextInt(255) + 1, random.nextInt(255) + 1)).getBytes(StandardCharsets.UTF_8));
                 }
                 fos.flush();
                 fos.close();
